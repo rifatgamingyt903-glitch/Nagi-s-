@@ -1,32 +1,34 @@
-const axios = require("axios");
-
+const axios = require('axios');
 module.exports = {
- config: {
- name: "ss",
- version: "1.0",
- author: "xnil6x",
- countDown: 5,
- role: 2,
- shortDescription: "Website screenshot",
- longDescription: "Takes screenshot of a given website and sends the image",
- category: "utility",
- guide: "{pn} <url>"
- },
+  config: {
+    name: "ss",
+    aliases: ["screenshot"],
+    version: "1.0",
+    author: "MILAN",
+    countDown: 5,
+    role: 0,
+    shortDescription: "get screenshot of website",
+    longDescription: "get screenshot of website",
+    category: "media",
+    guide: "{pn} link"
+  },
 
- onStart: async function ({ api, event, args }) {
- const url = args[0];
-
- if (!url || !url.startsWith("http")) {
- return api.sendMessage("❌ Please provide a valid URL.\nExample: /webshot https://example.com", event.threadID, event.messageID);
- }
-
- const shotURL = `https://image.thum.io/get/width/1200/crop/900/noanimate/${url}`;
-
- try {
- const res = await axios.get(shotURL, { responseType: "stream" });
- return api.sendMessage({ body: `🖼️ Screenshot of: ${url}`, attachment: res.data }, event.threadID, event.messageID);
- } catch (e) {
- return api.sendMessage("❌ Failed to take screenshot. The site may be down or restricted.", event.threadID, event.messageID);
- }
- }
+  onStart: async function ({ message, args }) {
+    const url = args.join(" ");
+    if (!url) {
+      return message.reply(`⚠️ | Please enter an url!`);
+    } else {
+      try {
+        const BASE_URL = `https://milanbhandari.imageapi.repl.co/screenshot?url=${encodeURIComponent(url)}`;
+        const form = {
+          body: ``
+        };
+        form.attachment = []
+        form.attachment[0] = await global.utils.getStreamFromURL(BASE_URL);
+        message.reply(form); 
+      } catch (e) { 
+        message.reply(`Error`);
+      }
+    }
+  }
 };

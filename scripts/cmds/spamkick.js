@@ -87,9 +87,9 @@ if (!global.antispam) global.antispam = new Map();
       case "off":
         if (global.antispam && global.antispam.has(event.threadID)) {
           global.antispam.delete(event.threadID);
-          api.sendMessage("Spam kick has been turned off for this group", event.threadID,event.messageID);
+          api.sendMessage("Spam kick has been turned off for this group♻️🚫", event.threadID,event.messageID);
         } else {
-          api.sendMessage("Spam kick is not active on this group", event.threadID,event.messageID);
+          api.sendMessage("Spam kick is not active on this group✅♻️", event.threadID,event.messageID);
         }
         break;
       default:
