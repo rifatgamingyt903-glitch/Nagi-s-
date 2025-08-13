@@ -1,62 +1,38 @@
-const axios = require("axios");
-const baseApiUrl = async () => {
-  const base = await axios.get(
-    `https://raw.githubusercontent.com/Blankid018/D1PT0/main/baseApiUrl.json`,
-  );
-  return base.data.api;
-};
-
+const axios = require('axios');
+ 
 module.exports = {
   config: {
-    name: "gemini",
-    version: "1.0",
-    author: "Dipto",
-    description: "gemeini ai",
-    countDown: 5,
+    name: 'gemini',
+    version: '1.0',
+    author: 'Arfan',
     role: 0,
-    category: "google",
-    guide: {
-      en: "{pn} message | photo reply",
-    },
+    category: 'Ai-Chat',
+    shortDescription: { en: `gemini ai` },
+    longDescription: { en: `gemini ai` },
+    guide: { en: '{pn}gemini [query]' },
   },
-  onStart: async ({ api, args, event }) => {
-    const prompt = args.join(" ");
-    //---- Image Reply -----//
-    if (event.type === "message_reply") {
-      var t = event.messageReply.attachments[0].url;
-      try {
-        const response = await axios.get(
-          `${await baseApiUrl()}/gemini?prompt=${encodeURIComponent(prompt)}&url=${encodeURIComponent(t)}`,
-        );
-        const data2 = response.data.dipto;
-        api.sendMessage(data2, event.threadID, event.messageID);
-      } catch (error) {
-        console.error("Error:", error.message);
-        api.sendMessage(error, event.threadID, event.messageID);
+ 
+  onStart: async function ({ api, event, args }) {
+    try {
+      const prompt = args.join(" ");
+ 
+      if (prompt) {
+        const processingMessage = await api.sendMessage(`Asking Gemini.please wait moment..⏳`, event.threadID);
+        const response = await axios.get(`https://shuddho-ts-api.hf.space/api/geminiweb?prompt=${encodeURIComponent(prompt)}`);
+ 
+        if (response.data && response.data.reply) {
+          await api.sendMessage({ body: response.data.reply }, event.threadID, event.messageID);
+          console.log(`Sent Gemini's response to the user`);
+        } else {
+          throw new Error(`Invalid or missing response from Gemini API`);
+        }
+ 
+        await api.unsendMessage(processingMessage.messageID);
       }
-    }
-    //---------- Message Reply ---------//
-    else if (!prompt) {
-      return api.sendMessage(
-        "Please provide a prompt or message reply",
-        event.threadID,
-        event.messageID,
-      );
-    } else {
-      try {
-        const respons = await axios.get(
-          `${await baseApiUrl()}/gemini?prompt=${encodeURIComponent(prompt)}`,
-        );
-        const message = respons.data.dipto;
-        api.sendMessage(message, event.threadID, event.messageID);
-      } catch (error) {
-        console.error("Error calling Gemini AI:", error);
-        api.sendMessage(
-          `Sorry, there was an error processing your request.${error}`,
-          event.threadID,
-          event.messageID,
-        );
-      }
+ 
+    } catch (error) {
+      console.error(`❌ | Failed to get Gemini's response: ${error.message}`);
+      api.sendMessage(`❌ | An error occured. You can try typing your query again or resending it. There might be an issue with the server that's causing the problem, and it might resolve on retrying.`, event.threadID);
     }
   },
 };

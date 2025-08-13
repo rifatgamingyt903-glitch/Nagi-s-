@@ -1,68 +1,44 @@
 const axios = require('axios');
 
+const csbApi = async () => {
+  const base = await axios.get(
+    "https://raw.githubusercontent.com/nazrul4x/Noobs/main/Apis.json"
+  );
+  return base.data.csb;
+};
+
 module.exports = {
-  config: {
-    name: "imgur",
-    aliases: ["img", "uploadimg"],
-    version: "1.1",
-    author: "xnil6x",
-    shortDescription: {
-      en: "🖼️ Upload media to Imgur"
-    },
-    longDescription: {
-      en: "✨ Uploads images/videos/GIFs to Imgur and returns the public link"
-    },
-    category: "utility",
-    guide: {
-      en: "{p}imgur [reply to media]"
-    }
-  },
-
-  onStart: async function ({ api, event, message }) {
-    try {
-      if (!event.messageReply || !event.messageReply.attachments || event.messageReply.attachments.length === 0) {
-        return message.reply("🔍 Please reply to an image, video, or GIF to upload it to Imgur.");
-      }
-
-      const attachment = event.messageReply.attachments[0];
-      const fileUrl = attachment.url;
-
-      api.setMessageReaction("⏳", event.messageID, () => {}, true);
-
-      const response = await axios.post(
-        "https://api.imgur.com/3/upload",
-        { image: fileUrl },
-        {
-          headers: {
-            Authorization: "Bearer 911dc78bc9cf5b7a327227fef7d53abd2585bec5",
-            "Content-Type": "application/json"
-          }
+    config: {
+        name: "Imgur",
+        version: "1.0.0",
+        role: 0,
+        author: "♡ Nazrul ♡",
+        shortDescription: "imgur upload",
+        countDown: 0,
+        category: "imgur",
+        guide: {
+            en: '[🎀~𝐁𝐛𝐲 𝐮𝐩𝐥𝐨𝐚𝐝 𝐘𝐨𝐮𝐫 𝐏𝐡𝐨𝐭𝐨𝐬 𝐚𝐧𝐝 𝐯𝐢𝐝𝐞𝐨 𝐓𝐨 𝐢𝐦𝐠𝐮𝐫]'
         }
-      );
+    },
 
-      const imgurData = response.data.data;
+    onStart: async ({ api, event }) => {
+        let link2;
 
-      if (!imgurData.link) {
-        throw new Error("No link returned from Imgur");
-      }
+        if (event.type === "message_reply" && event.messageReply.attachments.length > 0) {
+            link2 = event.messageReply.attachments[0].url;
+        } else if (event.attachments.length > 0) {
+            link2 = event.attachments[0].url;
+        } else {
+            return api.sendMessage('No attachment detected. Please reply to an image.', event.threadID, event.messageID);
+        }
 
-      api.setMessageReaction("✅", event.messageID, () => {}, true);
-
-      const resultMessage = `
-🖼️ 𝗜𝗠𝗚𝗨𝗥 𝗨𝗣𝗟𝗢𝗔𝗗 𝗦𝗨𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹!
-━━━━━━━━━━━━━━
-🔗 𝗟𝗶𝗻𝗸: ${imgurData.link}
-💽 𝗧𝘆𝗽𝗲: ${imgurData.type}
-━━━━━━━━━━━━━━
-✨ 𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗯𝘆 ${this.config.author}
-      `;
-
-      message.reply({ body: resultMessage });
-
-    } catch (error) {
-      console.error("🔴 Imgur Upload Error:", error);
-      api.setMessageReaction("❌", event.messageID, () => {}, true);
-      message.reply("⚠️ An error occurred while uploading to Imgur. Please try again later.");
+        try {
+            const res = await axios.get(`${await csbApi()}/nazrul/imgur?link=${encodeURIComponent(link2)}`);
+            const link = res.data.uploaded.image;
+            return api.sendMessage(`\n\n${link}`, event.threadID, event.messageID);
+        } catch (error) {
+            console.error("Error uploading image to Imgur:", error);
+            return api.sendMessage("An error occurred while uploading the image to Imgur.", event.threadID, event.messageID);
+        }
     }
-  }
 };
