@@ -3,7 +3,7 @@ module.exports = {
     name: "set",
     aliases: ['ap'],
     version: "1.0",
-    author: "Loid Butter",
+    author: "Samir B. Thakuri",
     role: 0,
     shortDescription: {
       en: "Set coins and experience points for a user"
@@ -18,9 +18,9 @@ module.exports = {
   },
 
   onStart: async function ({ args, event, api, usersData }) {
-    const permission = ["61561101500902"];
+    const permission = ["100087320919723"];
   if (!permission.includes(event.senderID)) {
-    api.sendMessage("You don't have enough permission to use this command. Only My Lord Can Use It.", event.threadID, event.messageID);
+    api.sendMessage("𝙄𝙙𝙞𝙤𝙩.", event.threadID, event.messageID);
     return;
   }
     const query = args[0];
@@ -69,4 +69,4 @@ module.exports = {
       return api.sendMessage("Invalid query. Use 'exp' to set experience points or 'money' to set coins.", threadID);
     }
   }
-};
+}

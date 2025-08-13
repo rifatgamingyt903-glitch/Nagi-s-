@@ -20,10 +20,10 @@ module.exports = {
 
 	langs: {
 		vi: {
-			restartting: "🔄 | Đang khởi động lại bot..."
+			𝑹𝒆𝒔𝒕𝒂𝒓𝒕𝒊𝒏𝒈: "🥹🥲 | Đang khởi động lại bot..."
 		},
 		en: {
-			restartting: "🔄 | Restarting bot..."
+			restartting: "🥹 | 𝒀𝒐𝒖𝒓 𝒃𝒃𝒚 𝒉𝒂𝒔 𝒃𝒆𝒆𝒏 𝒓𝒆𝒔𝒕𝒂𝒓𝒕𝒊𝒏𝒈"
 		}
 	},
 
@@ -31,7 +31,7 @@ module.exports = {
 		const pathFile = `${__dirname}/tmp/restart.txt`;
 		if (fs.existsSync(pathFile)) {
 			const [tid, time] = fs.readFileSync(pathFile, "utf-8").split(" ");
-			api.sendMessage(`✅ | Bot restarted\n⏰ | Time: ${(Date.now() - time) / 1000}s`, tid);
+			api.sendMessage(`✅ | 𝑩𝒃𝒚 𝒉𝒂𝒔 𝒃𝒆𝒆𝒏 𝒓𝒆𝒔𝒕𝒂𝒓𝒕\n⏰🥹 | Time: ${(Date.now() - time) / 1000}s`, tid);
 			fs.unlinkSync(pathFile);
 		}
 	},
