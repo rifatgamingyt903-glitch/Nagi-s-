@@ -1,108 +1,119 @@
 module.exports = {
   config: {
     name: "balance",
-    aliases: ["bal", "$", "cash"],
-    version: "3.2",
-    author: "xnil6x",
+    aliases: ["bal", "💰", "cash"],
+    version: "3.0",
+    author: "NTKhang & redesign by EXOCRAT",
     countDown: 3,
     role: 0,
-    description: "💰 Premium Economy System with Stylish Display",
+    shortDescription: "💰 Check financial status",
+    longDescription: "View detailed financial information with beautiful formatting",
     category: "economy",
     guide: {
-      en: "╔════✦ Usage Guide ✦════╗\n"
-        + "║ ➤ {pn} - Check your balance\n"
-        + "║ ➤ {pn} @user - Check others\n"
-        + "║ ➤ {pn} t @user amount - Transfer\n"
-        + "║ ➤ {pn} [reply] - Check replied user's balance\n"
-        + "╚══════════════════════╝"
+      en: "{pn} - View your balance\n{pn} @user - Check another user's balance\n{pn} top - View wealth rankings"
     }
   },
 
-  onStart: async function ({ message, event, args, usersData, prefix }) {
-    const { senderID, messageReply, mentions } = event;
-
-    const formatMoney = (amount) => {
-      if (isNaN(amount)) return "$0";
-      amount = Number(amount);
-      const scales = [
-        { value: 1e15, suffix: 'Q' },
-        { value: 1e12, suffix: 'T' },
-        { value: 1e9, suffix: 'B' },
-        { value: 1e6, suffix: 'M' },
-        { value: 1e3, suffix: 'k' }
-      ];
-      const scale = scales.find(s => amount >= s.value);
-      if (scale) {
-        const scaledValue = amount / scale.value;
-        return `$${scaledValue.toFixed(1)}${scale.suffix}`;
-      }
-      return `$${amount.toLocaleString()}`;
-    };
-
-    const createFlatDisplay = (title, contentLines) => {
-      return `✨ ${title} ✨\n` + 
-        contentLines.map(line => `➤ ${line}`).join('\n') + '\n';
-    };
-
-    if (args[0]?.toLowerCase() === 't') {
-      const targetID = Object.keys(mentions)[0] || messageReply?.senderID;
-      const amount = parseFloat(args[args.length - 1]);
-
-      if (!targetID || isNaN(amount)) {
-        return message.reply(createFlatDisplay("Invalid Usage", [
-          `Use: ${prefix}balance t @user amount`
-        ]));
-      }
-
-      if (amount <= 0) return message.reply(createFlatDisplay("Error", ["Amount must be positive."]));
-      if (senderID === targetID) return message.reply(createFlatDisplay("Error", ["You can't send money to yourself."]));
-
-      const [sender, receiver] = await Promise.all([
-        usersData.get(senderID),
-        usersData.get(targetID)
-      ]);
-
-      if (sender.money < amount) {
-        return message.reply(createFlatDisplay("Insufficient Balance", [
-          `You need ${formatMoney(amount - sender.money)} more.`
-        ]));
-      }
-
-      await Promise.all([
-        usersData.set(senderID, { money: sender.money - amount }),
-        usersData.set(targetID, { money: receiver.money + amount })
-      ]);
-
-      const receiverName = await usersData.getName(targetID);
-      return message.reply(createFlatDisplay("Transfer Complete", [
-        `To: ${receiverName}`,
-        `Sent: ${formatMoney(amount)}`,
-        `Your New Balance: ${formatMoney(sender.money - amount)}`
-      ]));
+  langs: {
+    en: {
+      balanceTitle: "✨ 𝗙𝗜𝗻𝗮𝗻𝗰𝗶𝗮𝗹 𝗦𝘁𝗮𝘁𝘂𝘀  ✨",
+      yourBalance: "👤 𝗬𝗼𝘂 𝗵𝗮𝘃𝗲:\n━━━━━━━━━━━━\n💰 𝗖𝗮𝘀𝗵: %1\n🏦 𝗕𝗮𝗻𝗸: %2\n💎 𝗧𝗼𝘁𝗮𝗹: %3\n━━━━━━━━━━━━",
+      userBalance: "👤 𝗨𝘀𝗲𝗿: %1\n━━━━━━━━━━━━\n💰 𝗖𝗮𝘀𝗵: %2\n🏦 𝗕𝗮𝗻𝗸: %3\n💎 𝗧𝗼𝘁𝗮𝗹: %4\n━━━━━━━━━━━━",
+      leaderboardTitle: "🏆 𝗪𝗲𝗮𝗹𝘁𝗵 𝗟𝗲𝗮𝗱𝗲𝗿𝗯𝗼𝗮𝗿𝗱  🏆",
+      leaderboardEntry: "▸ 𝗥𝗮𝗻𝗸 #%1: %2\n   %3 〘 %4 〙\n   💰 %5  🏦 %6\n━━━━━━━━━━━━",
+      noBalance: "💸 You're broke! Start earning!",
+      processing: "📊 Calculating wealth..."
     }
+  },
 
-    if (messageReply?.senderID && !args[0]) {
-      const targetID = messageReply.senderID;
-      const name = await usersData.getName(targetID);
-      const money = await usersData.get(targetID, "money");
-      return message.reply(createFlatDisplay(`${name}'s Balance`, [
-        `💰 Balance: ${formatMoney(money)}`
-      ]));
+  formatMoney: function (num) {
+    if (isNaN(num)) return "0";
+    const units = ["", "K", "M", "B", "T"];
+    let unitIndex = 0;
+    let n = parseFloat(num);
+    
+    while (n >= 1000 && unitIndex < units.length - 1) {
+      n /= 1000;
+      unitIndex++;
     }
+    
+    return n.toFixed(n < 10 ? 2 : 1) + units[unitIndex];
+  },
 
-    if (Object.keys(mentions).length > 0) {
-      const balances = await Promise.all(
-        Object.entries(mentions).map(async ([uid, name]) => {
-          const money = await usersData.get(uid, "money");
-          return `${name.replace('@', '')}: ${formatMoney(money)}`;
-        })
+  getProgressBar: function (percentage) {
+    const progress = Math.min(100, Math.max(0, percentage));
+    const filled = "■".repeat(Math.round(progress/10));
+    const empty = "□".repeat(10 - Math.round(progress/10));
+    return `[${filled}${empty}] ${progress.toFixed(1)}%`;
+  },
+
+  onStart: async function ({ message, usersData, event, args, getLang }) {
+    // Show processing message
+    await message.reply(getLang("processing"));
+    
+    const { senderID, mentions } = event;
+    
+    // Leaderboard mode
+    if (args[0]?.toLowerCase() === "top") {
+      const allUsers = await usersData.getAll();
+      const wealthyUsers = allUsers
+        .filter(user => user.money || user.bank)
+        .sort((a, b) => (b.money + b.bank) - (a.money + a.bank))
+        .slice(0, 10);
+      
+      if (wealthyUsers.length === 0) {
+        return message.reply(getLang("noBalance"));
+      }
+      
+      const maxWealth = wealthyUsers[0].money + wealthyUsers[0].bank;
+      const leaderboard = wealthyUsers.map((user, index) => {
+        const name = user.name || `User ${user.ID}`;
+        const total = user.money + user.bank;
+        const progress = this.getProgressBar((total/maxWealth)*100);
+        return getLang(
+          "leaderboardEntry",
+          index + 1,
+          name,
+          progress,
+          this.formatMoney(total),
+          this.formatMoney(user.money),
+          this.formatMoney(user.bank)
+        );
+      }).join("\n");
+      
+      return message.reply(
+        `📜 ${getLang("leaderboardTitle")}\n\n${leaderboard}`
       );
-      return message.reply(createFlatDisplay("User Balances", balances));
     }
-
-    const userMoney = await usersData.get(senderID, "money");
-    return message.reply(createFlatDisplay("Your Balance", [
-      `💵 ${formatMoney(userMoney)}`,
-    ]));
+    
+    // Check another user's balance
+    if (Object.keys(mentions).length > 0) {
+      const targetID = Object.keys(mentions)[0];
+      const userData = await usersData.get(targetID);
+      const cash = this.formatMoney(userData.money || 0);
+      const bank = this.formatMoney(userData.bank || 0);
+      const total = this.formatMoney((userData.money || 0) + (userData.bank || 0));
+      
+      return message.reply(
+        `${getLang("balanceTitle")}\n` +
+        getLang("userBalance", 
+          mentions[targetID].replace("@", ""), 
+          cash, 
+          bank, 
+          total
+        )
+      );
+    }
+    
+    // Check own balance
+    const userData = await usersData.get(senderID);
+    const cash = this.formatMoney(userData.money || 0);
+    const bank = this.formatMoney(userData.bank || 0);
+    const total = this.formatMoney((userData.money || 0) + (userData.bank || 0));
+    
+    message.reply(
+      `${getLang("balanceTitle")}\n` +
+      getLang("yourBalance", cash, bank, total)
+    );
   }
 };
